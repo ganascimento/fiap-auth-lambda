@@ -1,8 +1,6 @@
 name: Lambda Deploy
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -10,23 +8,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-    - uses: aws-actions/configure-aws-credentials@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-2
-    - name: AWS CLI
+
+    - name: Configure AWS Dotnet CLI
       run: dotnet tool install -g Amazon.Lambda.Tools
+
     - name: Restore dependencies
       run: dotnet restore ./AuthLambda
+
     - name: Build
       run: dotnet build ./AuthLambda --no-restore
+
     - name: Prepare package
+      if: github.event.pull_request.merged == true
       run: dotnet lambda package --project-location ./AuthLambda --output-package auth_lambda.zip --configuration Release --framework net6.0
+
     - name: Deploy to AWS
+      if: github.event.pull_request.merged == true
       run: aws lambda update-function-code --function-name AuthLambda --zip-file fileb://./auth_lambda.zip
