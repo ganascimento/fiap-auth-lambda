@@ -14,6 +14,8 @@ namespace AuthLambda;
 
 public class Function
 {
+    //deploy 
+    
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         if (string.IsNullOrEmpty(apigProxyEvent.Body))
